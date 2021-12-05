@@ -1,13 +1,14 @@
 /*
 Name: Timer demo
 Author: Monoclecat
-
 This demo will make the pin PORTB5 (pin 13 on the Arduino board) toggle every second
 */
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/atomic.h>
+
+//NOTE: A unsigned long holds values from 0 to 4,294,967,295 (2^32 - 1). It will roll over to 0 after reaching its maximum value.
 
 #define R 0
 #define Y 1
@@ -22,7 +23,7 @@ ISR(TIMER1_COMPA_vect){
 
 void init_millis(unsigned long f_cpu){
   unsigned long ctc_match_overflow;
-  ctc_match_overflow = ((f_cpu / 1000) / 8); //when timer1 is this value, 1ms has passed
+  ctc_match_overflow = ((f_cpu / 1000) / 8);  //when timer1 is this value, 1ms has passed
   // (Set timer to clear when matching ctc_match_overflow) | (Set clock divisor to 8)
   TCCR1B |= (1 << WGM12) | (1 << CS11);
   // high byte first, then low byte
@@ -43,23 +44,27 @@ unsigned long millis (void){
   return millis_return;
 }
 
+
+
 int main(void)
 {
   //DDRB = (1 << DDB5); //setting PORTB5 to an output
   DDRB = 0xFF;
   PORTB ^= (1 << PORTB5);
 
-  init_millis(8000000UL); //frequency the atmega8p is running at
+  init_millis(8000000UL);    //frequency the atmega8p is running at
   unsigned long prev_millis; //the last time the led was toggled
-  unsigned long r; //the last time the led was toggled
-  unsigned long y; //the last time the led was toggled
-  unsigned long g; //the last time the led was toggled
+  unsigned long r;           //the last time the led RED was changed.
+  unsigned long y;           //the last time the led YELLOW was changed.
+  unsigned long g;           //the last time the led GREEN was changed.
+  
   prev_millis = millis();
   r=y=g=millis();
+  
   sei();
-  PORTB |= (0<<R);
-  PORTB |= (0<<Y);
-  PORTB |= (0<<G);
+  
+  PORTB = (0<<R) | (0<<Y) | (0<<G);
+  
   for(;;){
     if (millis() - prev_millis > 250){
       PORTB ^= (1 << PORTB5); //Turn on / Turn off the LED
